@@ -9,7 +9,8 @@
 #include <unistd.h>
 #include <string.h>
 
-#define DEFAULT_BUFFER_SIZE 1024*1024*2
+#define MEGABYTE 1024*1024
+#define DEFAULT_BUFFER_SIZE 1024*1024*2 // 2M
 
 /* Dangerous devices to write to. */
 const char *dangers[] = {
@@ -57,7 +58,7 @@ void helpm()
 	"sdwrite will show the progress of the file copying and it will sync and wait in order to display it accurately.\n"
 	"Source file should be a regular file, and the destination file should be a device. Undefined behavior for the file size of source will happen if source is a special file.\n";
 
-	printf(help);
+	printf("%s\n", help);
 }
 
 
@@ -85,8 +86,8 @@ int main(int argc, char **argv, char **envp)
 		return 1;
 	}
 
-	FILE *fsource = fopen(source, "r");
-	FILE *fdestination = fopen(destination, "w");
+	FILE *fsource = fopen(source, "rb");
+	FILE *fdestination = fopen(destination, "wb");
 
 	if (!fsource)
 	{
@@ -102,9 +103,10 @@ int main(int argc, char **argv, char **envp)
 		return 3;
 	}
 
-	if (!buffersize)
+	/* If the buffersize is zero or above 256 megabytes. */
+	if (!buffersize || buffersize > MEGABYTE*256)
 	{
-		fprintf(stderr, "Error: A buffer size of 0 does not make sense!\n");
+		fprintf(stderr, "Error: A buffer size of %d does not make sense!\n", buffersize);
 		return 4;
 	}
 
@@ -115,6 +117,7 @@ int main(int argc, char **argv, char **envp)
 	if (!choice("Are you sure you want to continue?"))
 		return 0;
 
+	/* Cycle through each dangerous path and check if we are writing to it. */
 	for (int i = 0; i < sizeof(dangers)/sizeof(char*); i++)
 	{
 		if (!strcmp(dangers[i], destination))
@@ -135,13 +138,13 @@ int main(int argc, char **argv, char **envp)
 
 	printf("Writing %dMB...\n", fsize / (1024*1024));
 
-	int fwrote = 0;
+	size_t fwrote = 0;
 	char buffer[buffersize];
 
 	/* While EOF not reached, read into buffer with buffer size, and then write the bytes read from fread into the destination. */
 	while (!feof(fsource))
 	{
-		int bytes = fread(buffer, sizeof(char), buffersize, fsource);
+		size_t bytes = fread(buffer, sizeof(char), buffersize, fsource);
 
 		if (ferror(fsource))
 		{
