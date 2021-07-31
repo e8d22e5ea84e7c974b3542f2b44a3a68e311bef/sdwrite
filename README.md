@@ -11,3 +11,14 @@ In order to use sdwrite, you must know the small number of command-line argument
 That's all! 
 
 In a very unscientific test, sdwrite appears to be only slightly faster than dd when using the same block size. The status bar may also make the process faster psychologically. 
+
+Instructions as seen from the help menu:
+
+```
+sdwrite - Copy files, with a speciality in copying files to storage devices.
+Note: if you are trying to copy a Windows ISO, this is not the program: use something like WoeUSB.
+Note: if you are trying to write at a specific offset of a device, use the program dd.
+
+Usage: sdwrite [source, such as an ISO] [destination] [buffer-size], where buffer-size is optional at a default of 1M or 1024KB.
+sdwrite will show the progress of the file copying and it will sync and wait in order to display it accurately.
+Source file should be a regular file, and the destination file should be a device. Undefined behavior for the file size of source will happen if source is a special file.```
